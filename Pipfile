@@ -6,6 +6,10 @@ name = "pypi"
 [packages]
 fastapi = {extras = ["all"], version = "*"}
 sqlalchemy = "*"
+jwt = "*"
+passlib = "*"
+bcrypt = "*"
+python-jose = {extras = ["cryptography"], version = "*"}
 
 [dev-packages]
 
