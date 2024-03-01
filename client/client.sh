@@ -10,6 +10,12 @@ if [[ $# -eq 0 ]]; then
 fi
 
 function auth(){
+
+    if [[ $# -ne 2 ]]; then
+        echo "Error: Invalid number of arguments"
+        echo "Usage: $0 auth <email> <password>"
+        exit 1
+    fi
     data="{\"email\":\"${1}\",\"password\":\"${2}\"}"
     curl -X POST -H "Content-Type: application/json" -d "$data" ${URL}/auth
 }
@@ -18,6 +24,7 @@ function create_user() {
     data="{\"email\":\"${1}\",\"password\":\"${2}\"}"
     curl -X GET -H "Content-Type: application/json" -d "$data" ${URL}/fill
 }
+
 
 case $1 in
     "auth")

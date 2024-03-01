@@ -10,6 +10,7 @@ jwt = "*"
 passlib = "*"
 bcrypt = "*"
 python-jose = {extras = ["cryptography"], version = "*"}
+requests = "*"
 
 [dev-packages]
 
