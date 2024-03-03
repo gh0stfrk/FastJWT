@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from .config import SECRET_KEY, ALGORITHM
+from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_SECRET_KEY
 from fastapi.security import OAuth2PasswordBearer
 
 
@@ -39,6 +39,11 @@ def get_user(db:Session, email:str) -> User | None:
         return None
     return user
 
+def get_user_by_id(db:Session, id:int) -> User | None:
+    user = db.query(User).filter(User.id == id).first()
+    if not user:
+        return None
+    return user
 
 def authenticate_user(db:Session , email:str, password:str) -> User | bool:
     """
@@ -71,27 +76,52 @@ def create_access_token(data:dict, expires_delta:timedelta | None = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
-async def decode_token(token: str, key: str | None = None) -> str | None:
+def create_refresh_token(data: dict, expires_delta: timedelta | None = None):
+    """
+    Create a refresh token
+    Args:
+        data (dict): data to be encoded
+        expires_delta (timedelta | None, optional): expiration time. Defaults to None.
+    Returns:
+        str: JWT token
+    """
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, REFRESH_TOKEN_SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+async def decode_token(token: str, key: str | None = None, type: str = 'access') -> str | None:
     """
     Decode a JWT token
     
     Args:
         token (str): JWT token
         key (str | None, optional): key to extract from the token. Defaults to None.
-        
+        type (str, optional): type of token [refresh or access]
     Returns:
         str | None: extracted data from the token or None if token is invalid.
     """
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if type == 'refresh':
+            payload = jwt.decode(token, REFRESH_TOKEN_SECRET_KEY, algorithms=[ALGORITHM])
+        else:        
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        
         if key:
             return payload.get(key)
         return payload.get('sub')
-    except JWTError:
+    
+    except JWTError as e:
+        print(e)
         return None
