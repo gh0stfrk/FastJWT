@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi.responses import JSONResponse
 from .auth import get_current_user
-from ..schemas import UserInDB
+from app.schemas import UserInDB
 
 from fastapi.security import OAuth2PasswordBearer
 

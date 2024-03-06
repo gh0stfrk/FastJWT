@@ -11,6 +11,8 @@ passlib = "*"
 bcrypt = "*"
 python-jose = {extras = ["cryptography"], version = "*"}
 requests = "*"
+pylint = "*"
+discord-webhook = "*"
 
 [dev-packages]
 

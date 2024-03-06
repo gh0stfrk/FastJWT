@@ -1,10 +1,9 @@
-from .models import User
+from .models import User, DiscordUser
 from datetime import timedelta, datetime
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_SECRET_KEY
-from fastapi.security import OAuth2PasswordBearer
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -34,12 +33,28 @@ def hash_password(password) -> str:
 
 
 def get_user(db:Session, email:str) -> User | None:
+    """
+    Get user by email
+    Args:
+        db (Session): database session
+        email (str): user email
+    Returns:
+        User | None: user object if user exists, None otherwise.
+    """
     user = db.query(User).filter(User.email == email).first()
     if not user:
         return None
     return user
 
 def get_user_by_id(db:Session, id:int) -> User | None:
+    """
+    Get user by id
+    Args:
+        db (Session): database session
+        id (int): user id
+    Returns:
+        User | None: user object if user exists, None otherwise (if user does not exist in the database, return None)
+    """
     user = db.query(User).filter(User.id == id).first()
     if not user:
         return None
@@ -115,13 +130,46 @@ async def decode_token(token: str, key: str | None = None, type: str = 'access')
     try:
         if type == 'refresh':
             payload = jwt.decode(token, REFRESH_TOKEN_SECRET_KEY, algorithms=[ALGORITHM])
-        else:        
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        
+        else:    
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])     
         if key:
             return payload.get(key)
         return payload.get('sub')
-    
     except JWTError as e:
         print(e)
         return None
+
+def get_discord_user(db: Session, email: str) -> DiscordUser | None:
+    """
+    Get Discord user by email
+
+    Args:
+        db (Session): Database session
+        email (str): User email
+
+    Returns:
+        DiscordUser | None: Discord user object if user exists, None otherwise.
+    """
+    discord_user = db.query(DiscordUser).filter(DiscordUser.email == email).first()
+    if not discord_user:
+        return None
+    return discord_user
+
+def authenticate_discord_user(db: Session, email: str, password: str) -> DiscordUser | bool:
+    """
+    Authenticate Discord user
+
+    Args:
+        db (Session): Database session
+        email (str): User email
+        password (str): User password
+
+    Returns:
+        DiscordUser | bool: Discord user object if authentication is successful, False otherwise.
+    """
+    discord_user = get_discord_user(db, email)
+    if not discord_user:
+        return False
+    if discord_user.password != password:
+        return False
+    return discord_user
