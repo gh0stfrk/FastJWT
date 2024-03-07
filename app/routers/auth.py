@@ -86,7 +86,7 @@ async def refresh_token(refresh_token: str = Depends(check_cookie), db: Session 
     return JSONResponse({"token": access_token, "email": user.email}, status_code=200)
 
 
-@authenticate_router.post('/signup')
+@authentication_router.post('/signup')
 async def signup(user: DiscordUserSchema, db: Session = Depends(get_db)):
     """
     Create a new user

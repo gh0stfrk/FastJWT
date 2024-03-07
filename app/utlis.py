@@ -167,9 +167,11 @@ def authenticate_discord_user(db: Session, email: str, password: str) -> Discord
     Returns:
         DiscordUser | bool: Discord user object if authentication is successful, False otherwise.
     """
+    print(email)
     discord_user = get_discord_user(db, email)
+    print(discord_user)
     if not discord_user:
         return False
-    if discord_user.password != password:
+    if not verify_password(password, discord_user.hashed_password):
         return False
     return discord_user
